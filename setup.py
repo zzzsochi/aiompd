@@ -10,7 +10,7 @@ setup(name='aiompd',
       description='MPD (Music Player Daemon) client for asyncio',
       long_description=README,
       classifiers=[
-          "License :: Other/Proprietary License",
+          "License :: OSI Approved :: BSD License",
           "Operating System :: POSIX",
           "Programming Language :: Python :: 3.4",
           "Topic :: System :: Networking",
