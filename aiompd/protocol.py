@@ -13,11 +13,11 @@ class Protocol(asyncio.Protocol):
         log.debug('connection to {}'.format(peername))
         self.transport = transport
 
-    def data_received(self, data):
+    def data_received(self, data: bytes):
         log.debug('data received: {!r}'.format(data.decode()))
         self.client._received_data.put_nowait(data)
 
-    def connection_lost(self, exc):
+    def connection_lost(self, exc: Exception):
         log.debug('connection lost')
         if exc is not None:
             log.error('connection lost exc: {!r}'.format(exc))
@@ -25,4 +25,4 @@ class Protocol(asyncio.Protocol):
         self.client._on_connection_closed()
 
         if self.client.auto_reconnect:
-            asyncio.async(self.client._reconnect())
+            asyncio.ensure_future(self.client._reconnect())

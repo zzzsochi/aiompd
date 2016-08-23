@@ -6,7 +6,7 @@ with open('README.rst', 'r') as f:
 
 
 setup(name='aiompd',
-      version='0.2',
+      version='0.3',
       description='MPD (Music Player Daemon) client for asyncio',
       long_description=README,
       classifiers=[
@@ -23,4 +23,4 @@ setup(name='aiompd',
       url='https://github.com/zzzsochi/aiompd',
       keywords=['mpd', 'asyncio'],
       packages=find_packages()
-)
+      )
