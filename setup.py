@@ -6,7 +6,7 @@ with open('README.rst', 'r') as f:
 
 
 setup(name='aiompd',
-      version='0.3.0',
+      version='0.3.1',
       description='MPD (Music Player Daemon) client for asyncio',
       long_description=README,
       classifiers=[
