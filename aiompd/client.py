@@ -223,13 +223,14 @@ class Client:
     def shuffle(self, start: int=None, end: int=None):
         """ Shuffle current playlist.
         """
-        assert start is None and end is None
-        assert start is not None and end is not None
-
-        if start is not None:
-            yield from self._send_command('shuffle', '{}:{}'.format(start, end))
-        else:
+        if start is None and end is None:
             yield from self._send_command('shuffle')
+        elif start is not None and end is not None:
+            yield from self._send_command('shuffle', '{}:{}'.format(start, end))
+        elif end is not None:
+            yield from self._send_command('shuffle', '0:{}'.format(end))
+        elif start is not None:
+            raise ValueError("can't set 'start' argument without 'end'")
 
     @lock
     @asyncio.coroutine
