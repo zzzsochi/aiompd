@@ -25,4 +25,5 @@ class Protocol(asyncio.Protocol):
         self.client._on_connection_closed()
 
         if self.client.auto_reconnect:
+            log.debug('try to reconnect')
             asyncio.ensure_future(self.client._reconnect())

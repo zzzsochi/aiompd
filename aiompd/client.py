@@ -38,7 +38,7 @@ class Client:
         :param BaseEventLoop loop: event loop for `connect` method (default: None)
         :return: new Client instance
         """
-        client = cls()
+        client = cls(auto_reconnect=auto_reconnect)
         yield from client.connect(host, port, loop)
         return client
 
