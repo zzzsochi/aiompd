@@ -242,9 +242,23 @@ class Client:
     @lock
     @asyncio.coroutine
     def add(self, uri: str) -> str:
-        """ Add sond to playlist.
+        """ Add song to playlist.
         """
         return (yield from self._send_command('add', uri))
+
+    @lock
+    @asyncio.coroutine
+    def delete(self, *, id: int=None, pos: int=None) -> str:
+        """ Delete song from playlist.
+        """
+        assert id is None or pos is None
+
+        if id is not None:
+            return (yield from self._send_command('deleteid', id))
+        elif pos is not None:
+            return (yield from self._send_command('delete', pos))
+        else:
+            raise TypeError("id or pos argument is required")
 
     @lock
     @asyncio.coroutine
