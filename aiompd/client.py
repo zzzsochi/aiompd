@@ -160,11 +160,11 @@ class Client:
     def toggle(self):
         """ Toggle play/pause.
         """
-        if self._status['state'] == 'play':
+        if self._status.state == 'play':
             yield from self._send_command('pause', 1)
-        elif self._status['state'] == 'pause':
+        elif self._status.state == 'pause':
             yield from self._send_command('pause', 0)
-        elif self._status['state'] == 'stop':
+        elif self._status.state == 'stop':
             yield from self._send_command('play', 1)
 
     @lock_and_status
