@@ -290,3 +290,26 @@ class Client:
             return RuntimeError("bad and in response: {!r}".format(raw))
 
         return res
+
+    @lock
+    @asyncio.coroutine
+    def set_random(self, value: bool):
+        assert type(value) == bool
+        value = 1 if value else 0
+        yield from self._send_command('random', value)
+
+    @lock
+    @asyncio.coroutine
+    def set_consume(self, value: bool):
+        assert type(value) == bool
+        value = 1 if value else 0
+        yield from self._send_command('consume', value)
+
+    @lock
+    @asyncio.coroutine
+    def list(self, type_: str) -> list:
+        assert type_ in ('any', 'base', 'file', 'modified-since')
+        response = yield from self._send_command('list', type_)
+        lines = response.decode('utf-8').split('\n')
+        files = [file_ for file_ in lines if file_.startswith('file: ')]
+        return [file_.split(": ")[1].lstrip() for file_ in files]
