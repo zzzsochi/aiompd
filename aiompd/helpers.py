@@ -2,6 +2,7 @@ import asyncio
 import logging
 import re
 from types import GeneratorType
+from typing import Dict, List, Optional
 
 from .types import Status, Song
 
@@ -42,11 +43,11 @@ def lock_and_status(func):
     return wrapper
 
 
-def _str_bool(v: str) -> bool:
+def _str_bool(v: str) -> Optional[bool]:
     return v != '0' if v else None
 
 
-def _str_int(v: str) -> int:
+def _str_int(v: str) -> Optional[int]:
     return int(v) if v else None
 
 
@@ -83,7 +84,7 @@ def status_from_raw(raw: str) -> Status:
     )
 
 
-def songs_list_from_raw(raw: bytes) -> list:
+def songs_list_from_raw(raw: bytes) -> List[Song]:
     lines = raw.decode('utf8').split('\n')
 
     res = []
@@ -107,12 +108,12 @@ def songs_list_from_raw(raw: bytes) -> list:
         current[key] = value
 
     else:
-        return RuntimeError("bad and in response: {!r}".format(raw))
+        raise RuntimeError("bad and in response: {!r}".format(raw))
 
     return res
 
 
-def song_from_raw(raw: dict) -> Song:
+def song_from_raw(raw: Dict[str, Optional[str]]) -> Song:
     return Song(
         file=raw.get('file'),
         title=raw.get('Title'),
@@ -125,7 +126,7 @@ def song_from_raw(raw: dict) -> Song:
 class ExceptionQueueItem(Exception):
     RE = re.compile('^ACK \[(\d+)@(\d+)\] \{(.+)\} (.+)$')
 
-    def __init__(self, data):
+    def __init__(self, data: bytes) -> None:
         super().__init__(data)
 
         try:

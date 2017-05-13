@@ -10,6 +10,7 @@ __pycache__/*
 
 .python-version
 .coverage
+.mypy_cache
 
 *.sublime-settings
 *.sublime-project

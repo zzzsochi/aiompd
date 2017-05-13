@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import List, Tuple, Optional
 
 from .protocol import Protocol
 from .playlists import Playlists
@@ -24,14 +25,17 @@ class Client:
     _version_tuple = None
     auto_reconnect = True
 
-    def __init__(self, auto_reconnect: bool=True):
+    def __init__(self, auto_reconnect: bool=True) -> None:
         self.auto_reconnect = auto_reconnect
         self._lock = asyncio.Lock()
         self._received_data = asyncio.Queue(maxsize=1)
 
     @classmethod
-    async def make_connection(cls, host: str='localhost', port: int=6600,
-                              auto_reconnect: bool=True, loop=None):
+    async def make_connection(
+        cls, host: str='localhost', port: int=6600,
+        auto_reconnect: bool=True,
+        loop: Optional[asyncio.BaseEventLoop]=None,
+    ) -> 'Client':
         """ Classmethod for create the connection to mpd server.
 
         :param str host: hostname for connection (default `'localhost'`)
@@ -49,9 +53,13 @@ class Client:
         self._status = None
 
     async def _reconnect(self) -> asyncio.Future:
-        return asyncio.ensure_future(self.connect(self._host, self._port, self._loop))
+        return asyncio.ensure_future(
+            self.connect(self._host, self._port, self._loop))
 
-    async def connect(self, host: str='localhost', port: int=6600, loop=None):
+    async def connect(self,
+                      host: str='localhost',
+                      port: int=6600,
+                      loop=None) -> Tuple[asyncio.Transport, asyncio.Protocol]:
         """ Connect to mpd server.
 
         :param str host: hostname for connection (default `'localhost'`)
@@ -60,7 +68,7 @@ class Client:
             (default: `asyncio.get_event_loop()`)
         :return: pair `(transport, protocol)`
         """
-        with (await self._lock):
+        async with self._lock:
             if loop is None:
                 loop = asyncio.get_event_loop()
 
@@ -72,23 +80,24 @@ class Client:
             t, p = await loop.create_connection(_pf, host, port)
             self._transport = t
             self._protocol = p
-            log.debug('connected to %s:%s', host, port)
+            log.debug("connected to %s:%s", host, port)
 
-            welcome = (await self._received_data.get())
+            welcome = await self._received_data.get()
             welcome = welcome.strip().decode('utf8')
-            log.debug('welcome string %r', welcome)
+            log.debug("welcome string %r", welcome)
+
             self._version = welcome.rsplit(' ', 1)[1]
-            t = (int(i) for i in self._version.split('.', 2))
-            self._version_tuple = Version(*t)
+
+            _vers_t = (int(i) for i in self._version.split('.', 2))
+            self._version_tuple = Version(*_vers_t)
 
             return (t, p)
 
-    async def _send_command(self, command: str, *args) -> str:
+    async def _send_command(self, command: str, *args) -> bytes:
         # Low-level send command to server
-        args = [str(a) for a in args]
-        prepared = '{}\n'.format(' '.join([command] + args))
+        prepared = '{}\n'.format(' '.join([command] + [str(a) for a in args]))
         self._transport.write(prepared.encode('utf8'))
-        log.debug('data sent: %r', prepared)
+        log.debug("data sent: %r", prepared)
 
         res = await self._received_data.get()
 
@@ -148,7 +157,7 @@ class Client:
         await self._send_command('stop')
 
     @lock
-    async def pause(self, pause=True):
+    async def pause(self, pause: bool=True):
         """ Pause.
         """
         await self._send_command('pause', int(pause))
@@ -231,43 +240,41 @@ class Client:
         await self._send_command('clear')
 
     @lock
-    async def add(self, uri: str) -> str:
+    async def add(self, uri: str):
         """ Add song to playlist.
         """
-        return (await self._send_command('add', uri))
+        await self._send_command('add', uri)
 
     @lock
-    async def delete(self, *, id: int=None, pos: int=None) -> str:
+    async def delete(self, *, id: int=None, pos: int=None):
         """ Delete song from playlist.
         """
         assert id is None or pos is None
 
         if id is not None:
-            return (await self._send_command('deleteid', id))
+            await self._send_command('deleteid', id)
         elif pos is not None:
-            return (await self._send_command('delete', pos))
+            await self._send_command('delete', pos)
         else:
             raise TypeError("id or pos argument is required")
 
     @lock
-    async def playlist(self) -> list:
+    async def playlist(self) -> List[Song]:
         raw = await self._send_command('playlistinfo')
         return songs_list_from_raw(raw)
 
     @lock
     async def set_random(self, value: bool):
         assert type(value) == bool
-        value = 1 if value else 0
-        await self._send_command('random', value)
+        await self._send_command('random', 1 if value else 0)
 
     @lock
     async def set_consume(self, value: bool):
         assert type(value) == bool
-        value = 1 if value else 0
-        await self._send_command('consume', value)
+        await self._send_command('consume', 1 if value else 0)
 
     @lock
-    async def list(self, type_: str) -> list:
+    async def list(self, type_: str) -> List[str]:
         assert type_ in ('any', 'base', 'file', 'modified-since')
         response = await self._send_command('list', type_)
         lines = response.decode('utf-8').split('\n')
