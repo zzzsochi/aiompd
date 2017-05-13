@@ -88,8 +88,8 @@ def song_from_raw(raw: dict) -> Song:
         file=raw.get('file'),
         title=raw.get('Title'),
         name=raw.get('Name'),
-        pos=int(raw['Pos']) if raw['Pos'] else None,
-        id=int(raw['Id']) if raw['Id'] else None,
+        pos=int(raw['Pos']) if raw.get('Pos') else None,
+        id=int(raw['Id']) if raw.get('Id') else None,
     )
 
 

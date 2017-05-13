@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from .protocol import Protocol
+from .playlists import Playlists
 from .helpers import lock, lock_and_status
 from .helpers import status_from_raw, song_from_raw
 from .helpers import ExceptionQueueItem
@@ -297,3 +298,7 @@ class Client:
         lines = response.decode('utf-8').split('\n')
         files = [file_ for file_ in lines if file_.startswith('file: ')]
         return [file_.split(": ")[1].lstrip() for file_ in files]
+
+    @property
+    def playlists(self):
+        return Playlists(self)

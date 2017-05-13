@@ -15,3 +15,9 @@ Song = namedtuple('Song', [
     'file', 'title', 'name',  # str
     'pos', 'id',  # int
 ])
+
+
+Playlist = namedtuple('Playlist', [
+    'name',  # str
+    'songs',  # list
+])
