@@ -4,6 +4,7 @@ import logging
 from .protocol import Protocol
 from .helpers import lock, lock_and_status
 from .helpers import status_from_raw, song_from_raw
+from .helpers import ExceptionQueueItem
 from .types import Status, Song, Version
 
 log = logging.getLogger(__name__)
@@ -91,7 +92,13 @@ class Client:
         prepared = '{}\n'.format(' '.join([command] + args))
         self._transport.write(prepared.encode('utf8'))
         log.debug('data sent: %r', prepared)
-        return (yield from self._received_data.get())
+
+        res = yield from self._received_data.get()
+
+        if isinstance(res, ExceptionQueueItem):
+            raise res
+        else:
+            return res
 
     @property
     def version(self) -> str:

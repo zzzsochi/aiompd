@@ -90,3 +90,7 @@ def song_from_raw(raw: dict) -> Song:
         pos=int(raw['Pos']) if raw['Pos'] else None,
         id=int(raw['Id']) if raw['Id'] else None,
     )
+
+
+class ExceptionQueueItem(Exception):
+    pass

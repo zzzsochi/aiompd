@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+from .helpers import ExceptionQueueItem
+
 log = logging.getLogger(__name__)
 
 
@@ -16,11 +18,18 @@ class Protocol(asyncio.Protocol):
 
     def data_received(self, data: bytes):
         log.debug('data received: {!r}'.format(data.decode()))
-        self._input_data += data
-        if self._input_data.startswith(b"OK") and self._input_data[-1] == ord('\n') or \
-           self._input_data.endswith(b"OK\n"):
-            self.client._received_data.put_nowait(self._input_data)
+
+        if not self._input_data and data.startswith(b'ACK ['):
+            self.client._received_data.put_nowait(ExceptionQueueItem(data))
             self._input_data = b""
+
+        else:
+            self._input_data += data
+            if (self._input_data.startswith(b"OK") and
+                    self._input_data[-1] == ord('\n') or
+                    self._input_data.endswith(b"OK\n")):
+                self.client._received_data.put_nowait(self._input_data)
+                self._input_data = b""
 
     def connection_lost(self, exc: Exception):
         log.debug('connection lost')
