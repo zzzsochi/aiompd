@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from types import GeneratorType
 
 from .types import Status, Song
@@ -93,4 +94,30 @@ def song_from_raw(raw: dict) -> Song:
 
 
 class ExceptionQueueItem(Exception):
-    pass
+    RE = re.compile('^ACK \[(\d+)@(\d+)\] \{(.+)\} (.+)$')
+
+    def __init__(self, data):
+        super().__init__(data)
+
+        try:
+            self.text = text = data.decode('utf8').strip()
+        except UnicodeDecodeError:
+            self._set_not_parsed()
+            return
+
+        parsed = self.RE.match(text)
+        if parsed is None:
+            self._set_not_parsed()
+            return
+
+        self.error = int(parsed.group(1))
+        self.command_listNum = int(parsed.group(2))
+        self.command = parsed.group(3)
+        self.message = parsed.group(4)
+
+    def _set_not_parsed(self):
+        self.text = None
+        self.error = None
+        self.command_listNum = None
+        self.command = None
+        self.message = None
