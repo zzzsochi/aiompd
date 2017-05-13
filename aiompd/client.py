@@ -4,7 +4,7 @@ import logging
 from .protocol import Protocol
 from .playlists import Playlists
 from .helpers import lock, lock_and_status
-from .helpers import status_from_raw, song_from_raw
+from .helpers import status_from_raw, songs_list_from_raw, song_from_raw
 from .helpers import ExceptionQueueItem
 from .types import Status, Song, Version
 
@@ -252,32 +252,7 @@ class Client:
     @lock
     async def playlist(self) -> list:
         raw = await self._send_command('playlistinfo')
-        lines = raw.decode('utf8').split('\n')
-
-        res = []
-        current = None
-
-        for line in lines:
-            if line == 'OK':
-                if current:
-                    res.append(song_from_raw(current))
-
-                break
-
-            key, value = line.split(': ', 1)
-
-            if key == 'file':
-                if current:
-                    res.append(song_from_raw(current))
-
-                current = {'file': value}
-
-            current[key] = value
-
-        else:
-            return RuntimeError("bad and in response: {!r}".format(raw))
-
-        return res
+        return songs_list_from_raw(raw)
 
     @lock
     async def set_random(self, value: bool):

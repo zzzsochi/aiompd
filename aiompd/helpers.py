@@ -83,6 +83,35 @@ def status_from_raw(raw: str) -> Status:
     )
 
 
+def songs_list_from_raw(raw: bytes) -> list:
+    lines = raw.decode('utf8').split('\n')
+
+    res = []
+    current = None
+
+    for line in lines:
+        if line == 'OK':
+            if current:
+                res.append(song_from_raw(current))
+
+            break
+
+        key, value = line.split(': ', 1)
+
+        if key == 'file':
+            if current:
+                res.append(song_from_raw(current))
+
+            current = {'file': value}
+
+        current[key] = value
+
+    else:
+        return RuntimeError("bad and in response: {!r}".format(raw))
+
+    return res
+
+
 def song_from_raw(raw: dict) -> Song:
     return Song(
         file=raw.get('file'),

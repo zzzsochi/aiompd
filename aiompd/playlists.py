@@ -1,4 +1,4 @@
-from .helpers import lock, song_from_raw
+from .helpers import lock, songs_list_from_raw
 from .types import Playlist
 
 
@@ -11,15 +11,8 @@ class Playlists:
     async def _get_no_lock(self, name):
         """ Get one playlist info.
         """
-        raw = (await self._send_command('listplaylistinfo', name)).decode('utf8')
-
-        files = [n[6:] for n in raw.split('\n')[:-2] if n.startswith('file: ')]
-
-        songs = []
-        for file in files:
-            songs.append(song_from_raw({'file': file}))
-
-        return Playlist(name=name, songs=songs)
+        raw = (await self._send_command('listplaylistinfo', name))
+        return Playlist(name=name, songs=songs_list_from_raw(raw))
 
     @lock
     async def list(self):
